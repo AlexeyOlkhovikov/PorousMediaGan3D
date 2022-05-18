@@ -41,27 +41,27 @@ class Generator(nn.Module):
         super().__init__()
 
         self.linear_mapping = nn.Sequential(
-            spectral_norm(nn.Linear(noise_channels, 1024 * 4 * 4 * 4, bias=False)),
+            spectral_norm(nn.Linear(noise_channels, 512 * 4 * 4 * 4, bias=False)),
             nn.LeakyReLU()
         )
 
         self.upsample_layer = nn.Upsample(scale_factor=2)
-        self.block1 = PreActResBlock(1024, 512) # 4x4x4 => 8x8x8
-        self.block2 = PreActResBlock(512, 256) # 8x8x8 => 16x16x16
-        self.block3 = PreActResBlock(256, 128) # 16x16x16 => 32x32x32
-        self.block4 = PreActResBlock(128, 64) # 32x32x32 => 64x64x64
+        self.block1 = PreActResBlock(512, 256) # 4x4x4 => 8x8x8
+        self.block2 = PreActResBlock(256, 128) # 8x8x8 => 16x16x16
+        self.block3 = PreActResBlock(128, 64) # 16x16x16 => 32x32x32
+        self.block4 = PreActResBlock(64, 32) # 32x32x32 => 64x64x64
 
         self.final_layer = nn.Sequential(
-            nn.BatchNorm3d(64),
+            nn.BatchNorm3d(32),
             nn.LeakyReLU(),
-            spectral_norm(nn.Conv3d(64, 1, kernel_size=(1, 1, 1), bias=False)),
-            nn.Sigmoid() if type != 'wasserstein' else nn.Identity()
+            spectral_norm(nn.Conv3d(32, 1, kernel_size=(1, 1, 1), bias=False)),
+            nn.Sigmoid()
         )
 
 
     def forward(self, x):
         features = self.linear_mapping(x)
-        features = features.view(-1, 1024, 4, 4, 4)
+        features = features.view(-1, 512, 4, 4, 4)
 
         features = self.block1(features)
         features = self.upsample_layer(features)
@@ -88,7 +88,10 @@ class Discriminator(nn.Module):
         )
 
         self.downsample = nn.AvgPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
-        self.linear_mapping = spectral_norm(nn.Linear(in_features=512*4*4*4, out_features=1))
+        self.linear_mapping = nn.Sequential(
+            spectral_norm(nn.Linear(in_features=512*4*4*4, out_features=1)),
+            nn.Sigmoid()
+        )
 
         self.block1 = PreActResBlock(32, 64)
         self.block2 = PreActResBlock(64, 128)

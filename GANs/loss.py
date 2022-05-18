@@ -25,7 +25,7 @@ class GanLoss(nn.Module):
         else:
             # Discriminator loss
             if self.loss_type == 'standard':
-                loss = -torch.mean(torch.log(real_scores) + torch.log(1 - fake_scores))
+                loss = nn.BCEWithLogitsLoss()(real_scores, torch.ones_like(real_scores)) + nn.BCEWithLogitsLoss()(fake_scores, torch.zeros_like(fake_scores))
             elif self.loss_type == 'wasserstein':
                 loss = -real_scores.mean() + fake_scores.mean()
 

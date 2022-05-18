@@ -90,7 +90,7 @@ class Discriminator(nn.Module):
         self.downsample = nn.AvgPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
         self.linear_mapping = nn.Sequential(
             spectral_norm(nn.Linear(in_features=512*4*4*4, out_features=1)),
-            nn.Sigmoid()
+            # nn.Sigmoid()
         )
 
         self.block1 = PreActResBlock(32, 64)

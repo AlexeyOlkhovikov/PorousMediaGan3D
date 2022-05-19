@@ -9,9 +9,6 @@ class AdaptiveBatchNorm(nn.Module):
         self.batch_norm = nn.BatchNorm3d(num_features=num_features, affine=False)
         self.gamma = nn.Linear(embed_features+noise_dim, num_features)
         self.bias = nn.Linear(embed_features+noise_dim, num_features)
-
-        self.embed_features = embed_features
-        self.num_features = num_features
     
     def forward(self, g_feautures, noise, embed_features):
         features = torch.cat([noise, embed_features], dim=1)
@@ -39,11 +36,11 @@ class ResBlockUp(nn.Module):
             nn.ReLU(),
             nn.Upsample(scale_factor=2),
             spectral_norm(nn.Conv3d(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=1,
-                                    bias=False)),
+                                    bias=False, padding='same')),
             AdaptiveBatchNorm(noise_dim=noise_dim, embed_features=latent_dim, num_features=in_channels),
             nn.ReLU(),
             spectral_norm(nn.Conv3d(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=1,
-                                    bias=False))
+                                    bias=False, padding='same'))
         ])
 
     def forward(self, x, noise, embeddings):
@@ -65,17 +62,17 @@ class ResBlockDown(nn.Module):
 
         self.skip_layer = nn.Sequential(
             spectral_norm(nn.Conv3d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1,
-                                    bias=False)),
+                                    bias=False, padding='same')),
             nn.AvgPool3d(kernel_size=3, stride=2, padding=1)
         )
 
         self.base_layer = nn.Sequential(
             nn.ReLU(),
             spectral_norm(nn.Conv3d(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=1,
-                                    bias=False)),
+                                    bias=False, padding='same')),
             nn.ReLU(),
             spectral_norm(nn.Conv3d(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=1,
-                                    bias=False)),
+                                    bias=False, padding='same')),
             nn.AvgPool3d(kernel_size=3, stride=2, padding=1)
         )
 
@@ -87,12 +84,25 @@ class ResBlockDown(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels, latent_dim, noise_dim):
         super(Generator, self).__init__()
-        pass
+        self.linear_mapping = nn.Linear(noise_dim, in_channels*4*4*4)
 
-    def forward(self):
-        pass
+        self.resblock1 = ResBlockUp(in_channels=in_channels, out_channels=in_channels // 2, latent_dim=latent_dim, noise_dim=noise_dim) # 8x8x8
+        self.resblock2 = ResBlockUp(in_channels=in_channels // 2, out_channels=in_channels // 4, latent_dim=latent_dim, noise_dim=noise_dim) # 16x16x16
+        self.resblock3 = ResBlockUp(in_channels=in_channels // 4, out_channels=in_channels // 8, latent_dim=latent_dim, noise_dim=noise_dim) # 32x32x32
+        self.resblock4 = ResBlockUp(in_channels=in_channels // 8, out_channels=1, latent_dim=latent_dim, noise_dim=noise_dim) # 64x64x64
+
+        self.in_channels = in_channels
+
+    def forward(self, noise, embeddings):
+        x = self.linear_mapping(noise).view(-1, self.in_channels, 4, 4, 4)
+        x = self.resblock1(x, noise, embeddings)
+        x = self.resblock2(x, noise, embeddings)
+        x = self.resblock3(x, noise, embeddings)
+        img = self.resblock4(x, noise, embeddings)
+
+        return img
 
 
 class Discriminator(nn.Module):

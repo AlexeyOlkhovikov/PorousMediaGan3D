@@ -161,7 +161,7 @@ class Generator(nn.Module):
         self.resblock4 = ResBlockUp(in_channels=in_channels // 8, out_channels=in_channels // 16, latent_dim=latent_dim,
                                     noise_dim=noise_dim)  # 64x64x64
 
-        self.final_conv = nn.Conv3d(in_channels=in_channels // 16, out_channels=in_channels // 16, kernel_size=3, )
+        self.final_conv = nn.Conv3d(in_channels=in_channels // 16, out_channels=1, kernel_size=3 )
         self.in_channels = in_channels
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()

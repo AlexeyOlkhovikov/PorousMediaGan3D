@@ -55,7 +55,7 @@ class Generator(nn.Module):
             nn.BatchNorm3d(32),
             nn.LeakyReLU(),
             spectral_norm(nn.Conv3d(32, 1, kernel_size=(1, 1, 1), bias=False)),
-            nn.Sigmoid()
+            nn.Tanh()
         )
 
 
@@ -90,7 +90,6 @@ class Discriminator(nn.Module):
         self.downsample = nn.AvgPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
         self.linear_mapping = nn.Sequential(
             spectral_norm(nn.Linear(in_features=512*4*4*4, out_features=1)),
-            # nn.Sigmoid()
         )
 
         self.block1 = PreActResBlock(32, 64)

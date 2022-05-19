@@ -9,14 +9,14 @@ class NonLocalBlock(nn.Module):
         super(NonLocalBlock, self).__init__()
         self.inter_channel = channels
         self.conv_phi = nn.Conv3d(in_channels=channels, out_channels=self.inter_channel, kernel_size=1, stride=1,
-                                  padding=0, bias=False)
+                                  padding='same', bias=False)
         self.conv_theta = nn.Conv3d(in_channels=channels, out_channels=self.inter_channel, kernel_size=1, stride=1,
-                                    padding=0, bias=False)
+                                    padding='same', bias=False)
         self.conv_g = nn.Conv3d(in_channels=channels, out_channels=self.inter_channel, kernel_size=1, stride=1,
-                                padding=0, bias=False)
+                                padding='same', bias=False)
         self.softmax = nn.Softmax(dim=1)
         self.conv_mask = nn.Conv3d(in_channels=self.inter_channel, out_channels=channels, kernel_size=1, stride=1,
-                                   padding=0, bias=False)
+                                   padding='same', bias=False)
         self.gamma = nn.Parameter(torch.zeros(1))
         self.scale = math.sqrt(self.inter_channel)
 
@@ -24,37 +24,37 @@ class NonLocalBlock(nn.Module):
         residual = x
 
         phi = self.conv_phi(x)
-        print('phi', phi.size())
+        # print('phi', phi.size())
 
         theta = self.conv_theta(x)
 
-        print('theta', theta.size())
+        # print('theta', theta.size())
 
         val_g = self.conv_g(x)
 
-        print('g', val_g.size())
+        # print('g', val_g.size())
 
         phi = phi.view(phi.size(0), phi.size(1), -1)
 
-        print('phi', phi.size())
+        # print('phi', phi.size())
 
         theta = theta.view(theta.size(0), theta.size(1), -1)
-        print('theta', theta.size())
+        # print('theta', theta.size())
 
         val_g = val_g.view(val_g.size(0), val_g.size(1), -1)
 
-        print('g', val_g.size())
+        # print('g', val_g.size())
 
         sim_map = torch.bmm(phi.transpose(1, 2), theta)
 
-        print('sim map', sim_map.size())
+        # print('sim map', sim_map.size())
         sim_map = sim_map / self.scale
         #   sim_map = sim_map / self.temperature
 
         sim_map = self.softmax(sim_map)
 
         out_sim = torch.bmm(sim_map, val_g.transpose(1, 2))
-        print('out_sim', out_sim.size())
+        # print('out_sim', out_sim.size())
 
         out_sim = out_sim.transpose(1, 2)
 
@@ -161,7 +161,8 @@ class Generator(nn.Module):
         self.resblock4 = ResBlockUp(in_channels=in_channels // 8, out_channels=in_channels // 16, latent_dim=latent_dim,
                                     noise_dim=noise_dim)  # 64x64x64
 
-        self.final_conv = nn.Conv3d(in_channels=in_channels // 16, out_channels=1, kernel_size=3 )
+        self.final_conv = nn.Conv3d(in_channels=in_channels // 16, out_channels=1, kernel_size=3, padding='same',
+                                    bias=False)
         self.in_channels = in_channels
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
@@ -182,11 +183,10 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels):
         super(Discriminator, self).__init__()
 
         self.in_channels = in_channels
-        self.out_channels = out_channels
 
         self.relu = nn.ReLU()
 
@@ -198,18 +198,18 @@ class Discriminator(nn.Module):
         self.resblock4 = ResBlockDown(in_channels=self.in_channels * 8, out_channels=self.in_channels * 8)
 
         #  self.pool = nn.AvgPool3d(in_channels * 8)
-        self.out_ = spectral_norm(nn.Linear(self.out_channels, 1))
+        self.out_ = spectral_norm(nn.Linear(self.in_channels*8, 1))
 
-    def forward(self, x, labels):
+    def forward(self, x): # labels
         x = self.resblock1(x)
         x = self.non_local_block(x)
         x = self.resblock2(x)
         x = self.resblock3(x)
         x = self.resblock4(x)
 
-        res = torch.sum(self.relu(x, inplace=True), dim=(-1, -2))
+        res = torch.sum(self.relu(x), dim=(-1, -2, -3))
         scores = self.out_(res).squeeze(dim=1)
-        if self.use_projection_head:
-            scores += torch.diag(torch.inner(res, self.embedding_(labels)))
+        # if self.use_projection_head:
+        #     scores += torch.diag(torch.inner(res, self.embedding_(labels)))
 
         return scores

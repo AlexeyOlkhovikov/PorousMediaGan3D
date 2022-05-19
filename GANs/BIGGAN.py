@@ -24,37 +24,37 @@ class NonLocalBlock(nn.Module):
         residual = x
 
         phi = self.conv_phi(x)
-        print('phi', phi.size())
+     #   print('phi', phi.size())
 
         theta = self.conv_theta(x)
 
-        print('theta', theta.size())
+     #   print('theta', theta.size())
 
         val_g = self.conv_g(x)
 
-        print('g', val_g.size())
+      #  print('g', val_g.size())
 
         phi = phi.view(phi.size(0), phi.size(1), -1)
 
-        print('phi', phi.size())
+      #  print('phi', phi.size())
 
         theta = theta.view(theta.size(0), theta.size(1), -1)
-        print('theta', theta.size())
+      #  print('theta', theta.size())
 
         val_g = val_g.view(val_g.size(0), val_g.size(1), -1)
 
-        print('g', val_g.size())
+      #  print('g', val_g.size())
 
         sim_map = torch.bmm(phi.transpose(1, 2), theta)
 
-        print('sim map', sim_map.size())
+      #  print('sim map', sim_map.size())
         sim_map = sim_map / self.scale
         #   sim_map = sim_map / self.temperature
 
         sim_map = self.softmax(sim_map)
 
         out_sim = torch.bmm(sim_map, val_g.transpose(1, 2))
-        print('out_sim', out_sim.size())
+      #  print('out_sim', out_sim.size())
 
         out_sim = out_sim.transpose(1, 2)
 

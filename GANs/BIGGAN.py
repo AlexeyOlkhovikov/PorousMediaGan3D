@@ -24,37 +24,37 @@ class NonLocalBlock(nn.Module):
         residual = x
 
         phi = self.conv_phi(x)
-     #   print('phi', phi.size())
+        print('phi', phi.size())
 
         theta = self.conv_theta(x)
 
-     #   print('theta', theta.size())
+        print('theta', theta.size())
 
         val_g = self.conv_g(x)
 
-      #  print('g', val_g.size())
+        print('g', val_g.size())
 
         phi = phi.view(phi.size(0), phi.size(1), -1)
 
-      #  print('phi', phi.size())
+        print('phi', phi.size())
 
         theta = theta.view(theta.size(0), theta.size(1), -1)
-      #  print('theta', theta.size())
+        print('theta', theta.size())
 
         val_g = val_g.view(val_g.size(0), val_g.size(1), -1)
 
-      #  print('g', val_g.size())
+        print('g', val_g.size())
 
         sim_map = torch.bmm(phi.transpose(1, 2), theta)
 
-      #  print('sim map', sim_map.size())
+        print('sim map', sim_map.size())
         sim_map = sim_map / self.scale
         #   sim_map = sim_map / self.temperature
 
         sim_map = self.softmax(sim_map)
 
         out_sim = torch.bmm(sim_map, val_g.transpose(1, 2))
-      #  print('out_sim', out_sim.size())
+        print('out_sim', out_sim.size())
 
         out_sim = out_sim.transpose(1, 2)
 
@@ -158,10 +158,10 @@ class Generator(nn.Module):
                                     noise_dim=noise_dim)  # 16x16x16
         self.resblock3 = ResBlockUp(in_channels=in_channels // 4, out_channels=in_channels // 8, latent_dim=latent_dim,
                                     noise_dim=noise_dim)  # 32x32x32
-        self.resblock4 = ResBlockUp(in_channels=in_channels // 8, out_channels=1, latent_dim=latent_dim,
+        self.resblock4 = ResBlockUp(in_channels=in_channels // 8, out_channels=in_channels // 16, latent_dim=latent_dim,
                                     noise_dim=noise_dim)  # 64x64x64
 
-        self.final_conv = nn.Conv3d(in_channels=1, out_channels=1, kernel_size=3, )
+        self.final_conv = nn.Conv3d(in_channels=in_channels // 16, out_channels=in_channels // 16, kernel_size=3, )
         self.in_channels = in_channels
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
@@ -190,12 +190,12 @@ class Discriminator(nn.Module):
 
         self.relu = nn.ReLU()
 
-        self.non_local_block = NonLocalBlock(channel=self.in_channels * 2)
+        self.non_local_block = NonLocalBlock(channels=self.in_channels * 2)
 
-        self.resblock1 = ResBlockUp(in_channels=self.in_channels, out_channels=self.in_channels * 2)
-        self.resblock2 = ResBlockUp(in_channels=self.in_channels * 2, out_channels=self.in_channels * 4)
-        self.resblock3 = ResBlockUp(in_channels=self.in_channels * 4, out_channels=self.in_channels * 8)
-        self.resblock4 = ResBlockUp(in_channels=self.in_channels * 8, out_channels=self.in_channels * 8)
+        self.resblock1 = ResBlockDown(in_channels=self.in_channels, out_channels=self.in_channels * 2)
+        self.resblock2 = ResBlockDown(in_channels=self.in_channels * 2, out_channels=self.in_channels * 4)
+        self.resblock3 = ResBlockDown(in_channels=self.in_channels * 4, out_channels=self.in_channels * 8)
+        self.resblock4 = ResBlockDown(in_channels=self.in_channels * 8, out_channels=self.in_channels * 8)
 
         #  self.pool = nn.AvgPool3d(in_channels * 8)
         self.out_ = spectral_norm(nn.Linear(self.out_channels, 1))

@@ -190,7 +190,7 @@ class Discriminator(nn.Module):
 
         self.relu = nn.ReLU()
 
-        self.non_local_block = NonLocalBlock(channels=self.in_channels * 2)
+        # self.non_local_block = NonLocalBlock(channels=self.in_channels * 2)
 
         self.resblock1 = ResBlockDown(in_channels=self.in_channels, out_channels=self.in_channels * 2)
         self.resblock2 = ResBlockDown(in_channels=self.in_channels * 2, out_channels=self.in_channels * 4)
@@ -202,7 +202,7 @@ class Discriminator(nn.Module):
 
     def forward(self, x): # labels
         x = self.resblock1(x)
-        x = self.non_local_block(x)
+        # x = self.non_local_block(x)
         x = self.resblock2(x)
         x = self.resblock3(x)
         x = self.resblock4(x)

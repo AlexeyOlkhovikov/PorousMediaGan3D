@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import Dataset
+from torchvision import transforms
 import numpy as np
 
 
@@ -21,6 +22,14 @@ class GanDataset(Dataset):
         if self.transforms is not None:
             img = self.transforms(img).to(dtype=torch.float)
             slice = self.transforms(slice).to(dtype=torch.float)
+        else:
+            tr = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize((0.51, ), (0.06, ))
+            ])
+
+            img = tr(img).to(dtype=torch.float)
+            slice = tr(slice).to(dtype=torch.float)
 
         img = torch.unsqueeze(img, 0)
 

@@ -151,7 +151,7 @@ class Generator(nn.Module):
     def __init__(self, in_channels, latent_dim, noise_dim):
         super(Generator, self).__init__()
         self.linear_mapping = nn.Linear(noise_dim, in_channels * 4 * 4 * 4)
-        self.non_local_block = NonLocalBlock(channels=in_channels // 8)
+        # self.non_local_block = NonLocalBlock(channels=in_channels // 8)
         self.resblock1 = ResBlockUp(in_channels=in_channels, out_channels=in_channels // 2, latent_dim=latent_dim,
                                     noise_dim=noise_dim)  # 8x8x8
         self.resblock2 = ResBlockUp(in_channels=in_channels // 2, out_channels=in_channels // 4, latent_dim=latent_dim,
@@ -173,7 +173,7 @@ class Generator(nn.Module):
         x = self.resblock1(x, noise, embeddings)
         x = self.resblock2(x, noise, embeddings)
         x = self.resblock3(x, noise, embeddings)
-        x = self.non_local_block(x)
+        # x = self.non_local_block(x)
         x = self.resblock4(x, noise, embeddings)
 
         x = self.bnorm(self.relu(self.final_conv(x)))

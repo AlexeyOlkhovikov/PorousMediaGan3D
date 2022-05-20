@@ -190,6 +190,11 @@ class Discriminator(nn.Module):
 
         self.relu = nn.ReLU()
 
+        self.first_block = nn.Sequential(
+            spectral_norm(nn.Conv3d(1, in_channels, kernel_size=1, stride=1, padding='same', bias=False)),
+            nn.ReLU(),
+            nn.BatchNorm3d(in_channels)
+        )
         # self.non_local_block = NonLocalBlock(channels=self.in_channels * 2)
 
         self.resblock1 = ResBlockDown(in_channels=self.in_channels, out_channels=self.in_channels * 2)
@@ -201,6 +206,7 @@ class Discriminator(nn.Module):
         self.out_ = spectral_norm(nn.Linear(self.in_channels*8, 1))
 
     def forward(self, x): # labels
+        x = self.first_block(x)
         x = self.resblock1(x)
         # x = self.non_local_block(x)
         x = self.resblock2(x)

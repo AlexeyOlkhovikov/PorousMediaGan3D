@@ -26,8 +26,8 @@ class GAN(pl.LightningModule):
 
         self.gan_type = gan_type
 
-        self.noise_channels = 256
-        self.latent_dim_channels = 256
+        self.noise_channels = 128
+        self.latent_dim_channels = 128
 
         self.lr_gen = lr_gen
         self.lr_dis = lr_dis
@@ -43,13 +43,13 @@ class GAN(pl.LightningModule):
 
         if gan_type == 'dcgan':
             from .DCGAN import Generator, Discriminator
-            self.gen = Generator(self.noise_channels + self.latent_dim_channels, loss_type)
-            self.dis = Discriminator()
+            self.gen = Generator(128,  self.noise_channels, self.latent_dim_channels, loss_type)
+            self.dis = Discriminator(8)
 
         elif gan_type == 'biggan':
             from .BIGGAN import Generator, Discriminator
-            self.gen = Generator(16, self.latent_dim_channels, self.noise_channels)
-            self.dis = Discriminator(1)
+            self.gen = Generator(512, self.latent_dim_channels, self.noise_channels)
+            self.dis = Discriminator(16)
 
     def forward(self, noise):
         return self.gen(noise)
@@ -60,16 +60,10 @@ class GAN(pl.LightningModule):
         noise = torch.randn(len(slices), self.noise_channels).to(imgs.device)
         latent_slice_features = self.encoder(slices)
 
-        if self.gan_type == 'dcgan':
-            noise = torch.cat([noise, latent_slice_features], dim=1)
-            fake_images = self.gen(noise)
-            real_preds = self.dis(imgs)
-            fake_preds = self.dis(fake_images)
 
-        elif self.gan_type == 'biggan':
-            fake_images = self.gen(noise, latent_slice_features)
-            real_preds = self.dis(imgs)
-            fake_preds = self.dis(fake_images)
+        fake_images = self.gen(noise, latent_slice_features)
+        real_preds = self.dis(imgs)
+        fake_preds = self.dis(fake_images)
 
         if optimizer_idx == 0:
             loss = self.loss(fake_preds, None, fake_images[:, :, 32, :, :], slices)
@@ -90,18 +84,7 @@ class GAN(pl.LightningModule):
         noise = torch.randn(len(slices), self.noise_channels).to(imgs.device)
         latent_slice_features = self.encoder(slices)
 
-        if self.gan_type == 'dcgan':
-            noise = torch.cat([noise, latent_slice_features], dim=1)
-            fake_images = self.gen(noise)
-            real_preds = self.dis(imgs)
-            fake_preds = self.dis(fake_images)
-
-        elif self.gan_type == 'biggan':
-            fake_images = self.gen(noise, latent_slice_features)
-            real_preds = self.dis(imgs)
-            fake_preds = self.dis(fake_images)
-
-        slices = slices
+        fake_images = self.gen(noise, latent_slice_features)
 
         return {'slices': slices, 'fake_images': fake_images}
 
@@ -117,11 +100,11 @@ class GAN(pl.LightningModule):
         slices = torch.cat(slices, dim=0)
         fake_images = torch.cat(fake_images, dim=0)
 
-        slices = slices * 0.06 + 0.51
-        fake_images = fake_images * 0.06 + 0.51
+        slices = slices * 0.12 + 0.52
+        fake_images = fake_images * 0.12 + 0.52
 
-        grid_original = utils.make_grid(slices, nrow=16)
-        grid_generated = utils.make_grid(fake_images[:, :, 32, :, :], nrow=16)
+        grid_original = utils.make_grid(slices, nrow=8)
+        grid_generated = utils.make_grid(fake_images[:, :, 32, :, :], nrow=8)
 
         self.logger.experiment.add_image('generated_images_train', grid_generated, self.current_epoch)
         self.logger.experiment.add_image('original_images_train', grid_original, self.current_epoch)
@@ -131,11 +114,11 @@ class GAN(pl.LightningModule):
         slices = torch.cat([x['slices'].cpu() for x in outputs], dim=0)
         fake_images = torch.cat([x['fake_images'].cpu() for x in outputs], dim=0)
 
-        slices = slices * 0.06 + 0.51
-        fake_images = fake_images * 0.06 + 0.51
+        slices = slices * 0.12 + 0.52
+        fake_images = fake_images * 0.12 + 0.52
 
-        grid_original = utils.make_grid(slices, nrow=16)
-        grid_generated = utils.make_grid(fake_images[:, :, 32, :, :], nrow=16)
+        grid_original = utils.make_grid(slices, nrow=8)
+        grid_generated = utils.make_grid(fake_images[:, :, 32, :, :], nrow=8)
 
         self.logger.experiment.add_image('generated_images_validation', grid_generated, self.current_epoch)
         self.logger.experiment.add_image('original_images_validation', grid_original, self.current_epoch)

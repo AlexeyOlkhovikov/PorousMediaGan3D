@@ -25,7 +25,7 @@ class GanDataset(Dataset):
         else:
             tr = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize((0.51, ), (0.06, ))
+                transforms.Normalize((0.52, ), (0.12, ))
             ])
 
             img = tr(img).to(dtype=torch.float)

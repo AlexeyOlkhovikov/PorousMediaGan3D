@@ -19,6 +19,7 @@ class GanLoss(nn.Module):
             # Generator loss
             if self.loss_type == 'standard':
                 loss = nn.MSELoss()(fake_slice, target_slice)
+                # loss = nn.BCEWithLogitsLoss()(fake_scores, torch.ones_like(fake_scores))
             elif self.loss_type == 'wasserstein':
                 loss = nn.MSELoss()(fake_slice, target_slice)
 

@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
+from torchvision import utils
 import pytorch_lightning as pl
 import numpy as np
 
@@ -72,7 +73,7 @@ class Diffusion(pl.LightningModule):
         imgs = batch
         loss = self.model(imgs)
         self.log('loss_diffusion_validation', loss, prog_bar=True)
-        fake_imgs = self.model.sample(batch_size=4)
+        fake_imgs = self.model.sample(batch_size=8)
 
         return {'fake_images': fake_imgs}
 
@@ -96,7 +97,7 @@ class Diffusion(pl.LightningModule):
         return DataLoader(self.train_dataset, num_workers=8, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
-        return DataLoader(self.valid_dataset, num_workers=8, batch_size=len(self.valid_dataset), shuffle=False)
+        return DataLoader(self.valid_dataset, num_workers=8, batch_size=1, shuffle=False)
 
 
 

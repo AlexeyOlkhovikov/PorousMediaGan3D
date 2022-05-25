@@ -41,7 +41,7 @@ class GAN(pl.LightningModule):
 
         self.batch_size = batch_size
 
-        # self.encoder = Encoder(img_size, self.latent_dim_channels)
+#         self.encoder = Encoder(img_size, self.latent_dim_channels)
         self.encoder = timm.create_model('efficientnet_b3', in_chans=1, pretrained=True)
         self.encoder.conv_head = nn.Conv2d(384, self.latent_dim_channels, kernel_size=(1, 1), stride=(1, 1), bias=False)
         self.encoder.bn2 = nn.BatchNorm2d(self.latent_dim_channels, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)

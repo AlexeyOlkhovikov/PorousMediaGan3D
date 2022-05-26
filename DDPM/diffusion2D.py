@@ -514,6 +514,7 @@ class DiffusionDataset(data.Dataset):
 
     def __getitem__(self, index):
         img = self.imgs[index, :, :]
+        img = img / 255.
         img = self.transforms(img).to(dtype=torch.float)
         #         img = torch.unsqueeze(img, 0)
 

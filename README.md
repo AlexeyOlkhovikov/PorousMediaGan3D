@@ -11,9 +11,9 @@ Here are some results:
 
 Gray-Scale:
 
-<img src="https://github.com/AlexeyOlkhovikov/PorousMediaGan3D/blob/main/pics/gray-scale.png" width="100" height="100">
+<img src="https://github.com/AlexeyOlkhovikov/PorousMediaGan3D/blob/main/pics/gray-scale.png" width="500" height="500">
 
 Binarized images:
 
-![plot][scale=0.5](./pics/binary.png)
+<img src="https://github.com/AlexeyOlkhovikov/PorousMediaGan3D/blob/main/pics/binary.png" width="500" height="500">
 

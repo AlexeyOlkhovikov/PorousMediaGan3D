@@ -11,7 +11,7 @@ Here are some results:
 
 Gray-Scale:
 
-![plot][scale=0.5](./pics/gray-scale.png)
+![plot](./pics/gray-scale.png)(width="400" height="790")
 
 Binarized images:
 

@@ -11,7 +11,7 @@ Here are some results:
 
 Gray-Scale:
 
-<img src="./pic/gray-scale.png" width="100" height="100">
+<img src="https://github.com/AlexeyOlkhovikov/PorousMediaGan3D/blob/main/pics/gray-scale.png" width="100" height="100">
 
 Binarized images:
 
